@@ -23,6 +23,7 @@ import {
   MathUtils,
   Vector2,
   Object3D,
+  Texture,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
@@ -55,7 +56,29 @@ export class ParallaxTunnelComponent implements AfterViewInit {
   mouseX = 0;
   mouseY = 0;
 
-  constructor() {}
+  textures: Texture[] = [];
+
+  constructor() {
+    this.textures = [
+      new TextureLoader().load('../../assets/1.jpg'),
+      new TextureLoader().load('../../assets/2.jpg'),
+      new TextureLoader().load('../../assets/3.jpg'),
+      new TextureLoader().load('../../assets/4.jpg'),
+      new TextureLoader().load('../../assets/5.jpg'),
+      new TextureLoader().load('../../assets/6.jpg'),
+      new TextureLoader().load('../../assets/7.jpg'),
+      new TextureLoader().load('../../assets/8.jpg'),
+      new TextureLoader().load('../../assets/9.jpg'),
+      new TextureLoader().load('../../assets/10.jpg'),
+      // new TextureLoader().load('../../assets/download.png'),
+      // new TextureLoader().load('../../assets/download.png'),
+      // new TextureLoader().load('../../assets/download.png'),
+      // new TextureLoader().load('../../assets/download.png'),
+      // new TextureLoader().load('../../assets/download.png'),
+      // new TextureLoader().load('../../assets/download.png'),
+      // new TextureLoader().load('../../assets/download.png'),
+    ];
+  }
 
   get canvas() {
     return this.canvasElement?.nativeElement;
@@ -71,31 +94,10 @@ export class ParallaxTunnelComponent implements AfterViewInit {
     this.camera = this.buildDefaultCamera(this.container);
     this.renderer = this.buildRenderer(this.container, this.canvas);
 
-    const textures = [
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-    ];
-
-    const geometries = textures.map(_ => new PlaneGeometry(10, 10));
+    const geometries = this.textures.map(_ => new PlaneGeometry(10, 10));
 
     this.planes = geometries.map((geometry, i) => {
-      const material = new MeshBasicMaterial({ map: textures[i] });
+      const material = new MeshBasicMaterial({ map: this.textures[i] });
       const plane = new Mesh(geometry, material);
 
       if (i % 2 === 0) {
@@ -265,17 +267,24 @@ export class ParallaxTunnelComponent implements AfterViewInit {
 
     // Check if the first container object has moved out of view
 
+    this.planes.forEach((plane, i) => {
+      console.log(this.planes[0].position.z, 'first')
+      console.log(this.planes[this.planes.length -1].position.z, 'last')
 
-    // if (this.tunnel.position.x < -this.container.getBoundingClientRect().x) {
-    //   // Reset its position to the end of the second container object
-    //   this.tunnel.position.x = this.tunnel2.position.x + this.container.getBoundingClientRect().x;
-    // }
+      console.log((this.textures.length * 10), 'plane.position.z < -(this.textures.length * 10)');
+      
+      // forward infinite loop
+      if (plane.position.z > 10) {
+        // plane.position.z += -10;
+        plane.position.z = this.planes[this.planes.length - 1].position.z - 10 * i;
+      } 
 
-    // // Check if the second container object has moved out of view
-    // if (this.tunnel2.position.x < -this.container.getBoundingClientRect().x) {
-    //   // Reset its position to the end of the first container object
-    //   this.tunnel2.position.x = this.tunnel.position.x + this.container.getBoundingClientRect().x;
-    // }
+      // backwards infinite loop
+      // else if (plane.position.z < -(this.textures.length * 10)) {
+      //   plane.position.z = this.planes[0].position.z + 10 * i;
+      // }
+    })
+
 
     requestAnimationFrame(() => this.animate());
     this.renderer.render(this.scene, this.camera);
