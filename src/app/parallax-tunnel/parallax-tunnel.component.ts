@@ -226,15 +226,15 @@ export class ParallaxTunnelComponent implements AfterViewInit {
           const interval = setInterval(() => {
             plane.position.x -= this.mouseX * 0.005;
             plane.position.y -= this.mouseY * 0.005;
-          }, 100);
+          }, 50);
 
           setTimeout(() => {
             clearInterval(interval);
           }, 1000)
 
 
-          plane.rotation.x = this.mouseY * 0.1;
-          plane.rotation.y = this.mouseX * 0.1;
+          plane.rotation.x = this.mouseY * 0.05;
+          plane.rotation.y = this.mouseX * 0.05;
         });
      });
 
