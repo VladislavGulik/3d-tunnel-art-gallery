@@ -26,7 +26,6 @@ import {
   Texture,
   FogExp2,
 } from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
 @Component({
@@ -51,8 +50,6 @@ export class ParallaxTunnelComponent implements AfterViewInit {
   distanceCameraToTarget: number;
   controls: TrackballControls;
   planes: any[] = [];
-  tunnel: Object3D;
-  tunnel2: Object3D;
 
   mouseX = 0;
   mouseY = 0;
@@ -71,13 +68,6 @@ export class ParallaxTunnelComponent implements AfterViewInit {
       new TextureLoader().load('assets/8.jpg'),
       new TextureLoader().load('assets/9.jpg'),
       new TextureLoader().load('assets/10.jpg'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
-      // new TextureLoader().load('../../assets/download.png'),
     ];
   }
 
@@ -87,7 +77,6 @@ export class ParallaxTunnelComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.scene = new Scene();
-    // this.tunnel = new Object3D();
 
     // const ambl = new AmbientLight(0xfff);
     // this.scene.add(ambl);
@@ -145,79 +134,11 @@ export class ParallaxTunnelComponent implements AfterViewInit {
       return plane;
     });
 
-    // this.tunnel2 = this.tunnel.clone();
-    // this.tunnel2.position.x = this.tunnel.position.x + this.container.getBoundingClientRect().x;
-
-    // this.scene.add(this.tunnel);
-    // this.scene.add(this.tunnel2);
-
-    // ! old
-
-    // const planeGeometry = new PlaneGeometry(100, 100);
-    // const planeMaterial = new MeshBasicMaterial({ map: mapTextures[0], color: 0x000 });
-    // const plane = new Mesh(planeGeometry, planeMaterial);
-    // this.scene.add(plane);
-
-    // let zoomSpeed = 0.1;
-    // document.addEventListener('wheel', event => {
-    //   const direction = event.deltaY > 0 ? 1 : -1;
-    //   const zoomAmount = this.camera.fov + (direction * zoomSpeed);
-
-    //   this.planes.forEach((plane, i) => {
-    //     this.camera.fov = MathUtils.clamp(zoomAmount, 10, 75);
-    //     this.camera.updateProjectionMatrix();
-    //     // const textureIndex = Math.floor(Math.random() * textures.length);
-    //     plane.material.map = textures[i];
-    //   })
-    // });
-
-
-    // const parallaxAmount = 0.1;
-    // const parallaxOffset = new Vector2(0, 0);
-
-    // document.addEventListener('mousemove', event => {
-    //   const x = (event.clientX / this.container.clientWidth) * 2 - 1;
-    //   const y = -(event.clientY / this.container.clientHeight) * 2 + 1;
-    //   parallaxOffset.x = (x - 0.5) * parallaxAmount;
-    //   parallaxOffset.y = (y - 0.5) * parallaxAmount;
-
-    //   this.planes.forEach(plane => {
-    //     if (plane?.material?.map) {
-    //       plane.material.map.offset = parallaxOffset;
-    //     }
-    //   });
-    // });
-
-    // !
-
     let scroll = 0;
     this.container.addEventListener('wheel', event => {
-      // Adjust the z-coordinate of the 3D card images
-
       this.planes.forEach((plane: Mesh, i) => {
-        plane.position.z += event.deltaY * 0.01;
-
-
-
-        // plane.position.z += -event.deltaY * 0.001;
-
-        // console.log(plane.position.z, 'plane.position.z');
-
-        // ! if (plane.position.z > 1 || plane.position.z < -1) {
-        // !  plane.position.z -= this.planes[this.planes.length - 1].position.z;
-        // ! }
-
-        // const planeScale = 1 / (1 + plane.position.z);
-        // plane.scale.set(planeScale, planeScale, planeScale);
-
-        // ? plane.position.z = scroll + plane.position.x * 0.1;
-
-
-        // plane.position.z = scroll + 0.1;
-        // plane.position.x = scroll + plane.position.z * 0.1 * i;
+        plane.position.z += event.deltaY * 0.005;
       })
-
-
     });
 
 
@@ -227,8 +148,8 @@ export class ParallaxTunnelComponent implements AfterViewInit {
         this.planes.forEach((plane: Mesh, i) => {
           // plane.rotation.x = plane.rotation.x = event.movementX;
           const interval = setInterval(() => {
-            plane.position.x -= this.mouseX * 0.005;
-            plane.position.y -= this.mouseY * 0.005;
+            plane.position.x -= this.mouseX * 0.001;
+            plane.position.y -= this.mouseY * 0.001;
           }, 50);
 
           setTimeout(() => {
@@ -262,6 +183,7 @@ export class ParallaxTunnelComponent implements AfterViewInit {
     // const grid = new GridHelper(200, 10, 0xffffff, 0xffffff);
     // this.scene.add( grid );
     
+    // ! FOG TO BLUR
     this.scene.fog = new FogExp2(0xffffff, 0.01);
     this.renderer.setClearColor(this.scene.fog.color, 1);
 
@@ -270,18 +192,12 @@ export class ParallaxTunnelComponent implements AfterViewInit {
   }
 
   private animate() {
-    // this.tunnel.position.x -= 0.1;
-    // this.tunnel2.position.x -= 0.1;
-
-    // Check if the first container object has moved out of view
-
     this.planes.forEach((plane, i) => {
       // forward infinite loop
       if (plane.position.z > 10) {
         // plane.position.z += -10;
         plane.position.z = this.planes[this.planes.length - 1].position.z - 10 * i;
-      } 
-
+      }
       // backwards infinite loop
       // else if (plane.position.z < -(this.textures.length * 10)) {
       //   plane.position.z = this.planes[0].position.z + 10 * i;
