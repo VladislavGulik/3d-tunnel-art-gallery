@@ -24,6 +24,7 @@ import {
   Vector2,
   Object3D,
   Texture,
+  FogExp2,
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
@@ -60,16 +61,16 @@ export class ParallaxTunnelComponent implements AfterViewInit {
 
   constructor() {
     this.textures = [
-      new TextureLoader().load('./../../assets/1.jpg'),
-      new TextureLoader().load('./../../assets/2.jpg'),
-      new TextureLoader().load('./../../assets/3.jpg'),
-      new TextureLoader().load('./../../assets/4.jpg'),
-      new TextureLoader().load('./../../assets/5.jpg'),
-      new TextureLoader().load('./../../assets/6.jpg'),
-      new TextureLoader().load('./../../assets/7.jpg'),
-      new TextureLoader().load('./../../assets/8.jpg'),
-      new TextureLoader().load('./../../assets/9.jpg'),
-      new TextureLoader().load('./../../assets/10.jpg'),
+      new TextureLoader().load('assets/1.jpg'),
+      new TextureLoader().load('assets/2.jpg'),
+      new TextureLoader().load('assets/3.jpg'),
+      new TextureLoader().load('assets/4.jpg'),
+      new TextureLoader().load('assets/5.jpg'),
+      new TextureLoader().load('assets/6.jpg'),
+      new TextureLoader().load('assets/7.jpg'),
+      new TextureLoader().load('assets/8.jpg'),
+      new TextureLoader().load('assets/9.jpg'),
+      new TextureLoader().load('assets/10.jpg'),
       // new TextureLoader().load('../../assets/download.png'),
       // new TextureLoader().load('../../assets/download.png'),
       // new TextureLoader().load('../../assets/download.png'),
@@ -257,6 +258,13 @@ export class ParallaxTunnelComponent implements AfterViewInit {
 
     // this.createControls();
 
+
+    // const grid = new GridHelper(200, 10, 0xffffff, 0xffffff);
+    // this.scene.add( grid );
+    
+    this.scene.fog = new FogExp2(0xffffff, 0.01);
+    this.renderer.setClearColor(this.scene.fog.color, 1);
+
     this.animate();
     this.onResize();
   }
@@ -268,11 +276,6 @@ export class ParallaxTunnelComponent implements AfterViewInit {
     // Check if the first container object has moved out of view
 
     this.planes.forEach((plane, i) => {
-      console.log(this.planes[0].position.z, 'first')
-      console.log(this.planes[this.planes.length -1].position.z, 'last')
-
-      console.log((this.textures.length * 10), 'plane.position.z < -(this.textures.length * 10)');
-      
       // forward infinite loop
       if (plane.position.z > 10) {
         // plane.position.z += -10;
