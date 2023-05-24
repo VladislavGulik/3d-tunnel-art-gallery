@@ -25,7 +25,14 @@ import {
   Object3D,
   Texture,
   FogExp2,
+  ShaderMaterial,
+  SphereGeometry,
+  BoxGeometry,
+  CubeTexture,
+  BackSide,
 } from 'three';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+// import { RenderPass } from 'three/examples//';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 
 @Component({
@@ -54,6 +61,9 @@ export class ParallaxTunnelComponent implements AfterViewInit {
   mouseX = 0;
   mouseY = 0;
 
+  shaderMaterial: ShaderMaterial;
+  tunnel: Mesh;
+
   textures: Texture[] = [];
 
   constructor() {
@@ -77,12 +87,44 @@ export class ParallaxTunnelComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.scene = new Scene();
+    this.scene.background = new Color(0xE1ECEE)
+
+    const geometry = new BoxGeometry(100, 100, -300);
+
+    const material = new ShaderMaterial({
+      uniforms: {},
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec2 vUv;
+        void main() {
+          vec2 distortedUV = vec2(vUv.x, vUv.y * 0.5 + sin(vUv.y * 10.0) * 0.1);
+          vec3 color = vec3(168.0/255.0, 151.0/255.0, 188.0/255.0) * distortedUV.x + vec3(130.0/255.0, 194.0/255.0, 208.0/255.0) * distortedUV.y;
+          gl_FragColor = vec4(color, 1.0);
+        }
+      `
+    });
+
+    this.scene.add(new Mesh(geometry, material));
+
+    // this.scene.add(this.tunnel);
 
     // const ambl = new AmbientLight(0xfff);
     // this.scene.add(ambl);
 
     this.camera = this.buildDefaultCamera(this.container);
     this.renderer = this.buildRenderer(this.container, this.canvas);
+
+    // Create a RenderPass
+    // var renderPass = new RenderPass(this.scene, this.camera);
+
+    // Create a DepthOfFieldPass
+    // var dofPass = new DepthOfFieldPass(camera, { focusDistance: 5, blurAmount: 0.1 });
 
     const geometries = this.textures.map(_ => new PlaneGeometry(10, 10));
 
@@ -119,7 +161,7 @@ export class ParallaxTunnelComponent implements AfterViewInit {
         this.scene.add(plane);
       }
 
-      plane.position.z = -i * 10;
+      plane.position.z = -i * 5;
 
       // plane.position.z = -i * 2;
 
@@ -161,32 +203,11 @@ export class ParallaxTunnelComponent implements AfterViewInit {
           plane.rotation.y = this.mouseX * 0.05;
         });
      });
-
-
-    //  document.addEventListener('mousemove', event => {
-    //   const x = (event.clientX / this.container.clientWidth) * 2 - 1;
-    //   const y = -(event.clientY / this.container.clientHeight) * 2 + 1;
-
-    //   this.planes.forEach(plane => {
-    //     plane.position.z += event.deltaY * 0.001;
-    //     // Scale the 3D card images based on their z-coordinate
-    //     const planeScale = 1 / (1 + plane.position.z);
-    //     plane.scale.set(planeScale, planeScale, planeScale);
-    //   });
-    // });
-
-
-
-    // this.createControls();
-
-
-    // const grid = new GridHelper(200, 10, 0xffffff, 0xffffff);
-    // this.scene.add( grid );
     
     // ! FOG TO BLUR
-    this.scene.fog = new FogExp2(0xffffff, 0.01);
-    this.renderer.setClearColor(this.scene.fog.color, 1);
-
+    // this.scene.fog = new FogExp2(0xfab406, 0.001);
+    // this.renderer.setClearColor(this.scene.fog.color, 1);
+   
     this.animate();
     this.onResize();
   }
@@ -203,7 +224,6 @@ export class ParallaxTunnelComponent implements AfterViewInit {
       //   plane.position.z = this.planes[0].position.z + 10 * i;
       // }
     })
-
 
     requestAnimationFrame(() => this.animate());
     this.renderer.render(this.scene, this.camera);
