@@ -64,21 +64,31 @@ export class ParallaxTunnelComponent implements AfterViewInit {
   shaderMaterial: ShaderMaterial;
   tunnel: Mesh;
 
+  tunnelTexture: any;
   textures: Texture[] = [];
+  textureUrls: string[] = [];
+  texturePromises: any[] = []
 
   constructor() {
-    this.textures = [
-      new TextureLoader().load('assets/1.jpg'),
-      new TextureLoader().load('assets/2.jpg'),
-      new TextureLoader().load('assets/3.jpg'),
-      new TextureLoader().load('assets/4.jpg'),
-      new TextureLoader().load('assets/5.jpg'),
-      new TextureLoader().load('assets/6.jpg'),
-      new TextureLoader().load('assets/7.jpg'),
-      new TextureLoader().load('assets/8.jpg'),
-      new TextureLoader().load('assets/9.jpg'),
-      new TextureLoader().load('assets/10.jpg'),
+    this.textureUrls = [
+     'assets/1.jpg',
+     'assets/2.jpg',
+     'assets/3.jpg',
+     'assets/4.jpg',
+     'assets/5.jpg',
+     'assets/6.jpg',
+     'assets/7.jpg',
+     'assets/8.jpg',
+     'assets/9.jpg',
+     'assets/10.jpg',
+     'assets/tunnel.jpg'
     ];
+
+    this.texturePromises = this.textureUrls.map((url) => {
+      return new Promise((resolve, reject) => {
+        new TextureLoader().load(url, resolve, undefined, reject);
+      });
+    });
   }
 
   get canvas() {
@@ -86,31 +96,45 @@ export class ParallaxTunnelComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    Promise.all(this.texturePromises)
+      .then((loadedTextures) => {
+        this.textures.push(...loadedTextures);
+        this.tunnelTexture = this.textures.pop();
+        this.initScene();
+      })
+  }
+
+  initScene() {
     this.scene = new Scene();
     this.scene.background = new Color(0xE1ECEE)
 
-    const geometry = new BoxGeometry(100, 100, -300);
+    // const geometry = new BoxGeometry(400, 200, -1000);
+    const geometry = new BoxGeometry(400, 200, -200);
 
-    const material = new ShaderMaterial({
-      uniforms: {},
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        varying vec2 vUv;
-        void main() {
-          vec2 distortedUV = vec2(vUv.x, vUv.y * 0.5 + sin(vUv.y * 10.0) * 0.1);
-          vec3 color = vec3(168.0/255.0, 151.0/255.0, 188.0/255.0) * distortedUV.x + vec3(130.0/255.0, 194.0/255.0, 208.0/255.0) * distortedUV.y;
-          gl_FragColor = vec4(color, 1.0);
-        }
-      `
-    });
-
+    const material = new MeshBasicMaterial({
+      map: this.tunnelTexture,
+    })
     this.scene.add(new Mesh(geometry, material));
+
+    // const material = new ShaderMaterial({
+    //   vertexShader: `
+    //     varying vec2 vUv;
+    //     void main() {
+    //       vUv = uv;
+    //       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    //     }
+    //   `,
+    //   fragmentShader: `
+    //     varying vec2 vUv;
+    //     void main() {
+    //       vec2 distortedUV = vec2(vUv.x, vUv.y * 0.5 + sin(vUv.y * 10.0) * 0.01);
+    //       vec3 color = vec3(0,0,0) * distortedUV.x + vec3(1,1,1) * distortedUV.y;
+    //       gl_FragColor = vec4(color, 1.0);
+    //     }
+    //   `,
+    // });
+
+    // this.scene.add(new Mesh(geometry, material));
 
     // this.scene.add(this.tunnel);
 
@@ -119,27 +143,24 @@ export class ParallaxTunnelComponent implements AfterViewInit {
 
     this.camera = this.buildDefaultCamera(this.container);
     this.renderer = this.buildRenderer(this.container, this.canvas);
-
+    
     // Create a RenderPass
     // var renderPass = new RenderPass(this.scene, this.camera);
 
     // Create a DepthOfFieldPass
     // var dofPass = new DepthOfFieldPass(camera, { focusDistance: 5, blurAmount: 0.1 });
 
-    const geometries = this.textures.map(_ => new PlaneGeometry(10, 10));
+    const geometries = this.textures.map(_ => new PlaneGeometry(15, 15));
 
     this.planes = geometries.map((geometry, i) => {
       const material = new MeshBasicMaterial({ map: this.textures[i] });
       const plane = new Mesh(geometry, material);
 
       if (i % 2 === 0) {
-
-
-        // plane.rotation.x = i * 1;
-
         if (i > 2) {
-          plane.position.y = i  + this.randomBetween(-10, -5) * 0.1;
+          plane.position.y = i + this.randomBetween(-7, -5) * 0.1;
           plane.position.x = i * -2 - this.randomBetween(-10, 5);
+          // plane.rotation.y = i + this.randomBetween(-100, 100);
         } else {
           plane.position.y = i * 1;
           plane.position.x = i * -2 - 10;
@@ -149,60 +170,45 @@ export class ParallaxTunnelComponent implements AfterViewInit {
       } else {
 
         if (i > 2) {
-          plane.position.y = i - this.randomBetween(5, 10) * 0.1;
+          plane.position.y = i - this.randomBetween(5, 7) * 0.1;
           plane.position.x = i * 2 + this.randomBetween(-10, 5);
         } else {
           plane.position.y = i * -1;
           plane.position.x = i * 2 + 10;
         }
 
-        // plane.rotation.x = i * -1;
-
         this.scene.add(plane);
       }
 
-      plane.position.z = -i * 5;
+      plane.position.z = -i * 15;
 
-      // plane.position.z = -i * 2;
-
-      // plane.position.x = i * 1;
-      // plane.position.y = i * 1;
-
-      // plane.position.z = i * 0.1;
-
-      // this.tunnel.add(plane);
-
-      // this.scene.add(plane);
       return plane;
     });
 
-    let scroll = 0;
     this.container.addEventListener('wheel', event => {
       this.planes.forEach((plane: Mesh, i) => {
         plane.position.z += event.deltaY * 0.005;
       })
     });
 
+    this.container.addEventListener('mousemove', event => {
+      this.mouseX = (event.clientX / this.container.clientWidth) * 2 - 1;
+      this.mouseY = -(event.clientY / this.container.clientHeight) * 2 + 1;
+      this.planes.forEach((plane: Mesh, i) => {
+        // plane.rotation.x = plane.rotation.x = event.movementX;
+        const interval = setInterval(() => {
+          plane.position.x -= this.mouseX * 0.001;
+          plane.position.y -= this.mouseY * 0.001;
+        }, 50);
 
-     this.container.addEventListener('mousemove', event => {
-        this.mouseX = (event.clientX / this.container.clientWidth) * 2 - 1;
-        this.mouseY = -(event.clientY / this.container.clientHeight) * 2 + 1;
-        this.planes.forEach((plane: Mesh, i) => {
-          // plane.rotation.x = plane.rotation.x = event.movementX;
-          const interval = setInterval(() => {
-            plane.position.x -= this.mouseX * 0.001;
-            plane.position.y -= this.mouseY * 0.001;
-          }, 50);
+        setTimeout(() => {
+          clearInterval(interval);
+        }, 1000)
 
-          setTimeout(() => {
-            clearInterval(interval);
-          }, 1000)
-
-
-          plane.rotation.x = this.mouseY * 0.05;
-          plane.rotation.y = this.mouseX * 0.05;
-        });
-     });
+        plane.rotation.x = this.mouseY * 0.01;
+        plane.rotation.y = this.mouseX * 0.01;
+      });
+    });
     
     // ! FOG TO BLUR
     // this.scene.fog = new FogExp2(0xfab406, 0.001);
@@ -214,22 +220,17 @@ export class ParallaxTunnelComponent implements AfterViewInit {
 
   private animate() {
     this.planes.forEach((plane, i) => {
-      // forward infinite loop
-      if (plane.position.z > 10) {
-        // plane.position.z += -10;
-        plane.position.z = this.planes[this.planes.length - 1].position.z - 10 * i;
+       // forward infinite loop
+      if (plane.position.z > 15) {
+        plane.position.z = this.planes[this.planes.length - 1].position.z - 15 * i;
       }
       // backwards infinite loop
-      // else if (plane.position.z < -(this.textures.length * 10)) {
-      //   plane.position.z = this.planes[0].position.z + 10 * i;
-      // }
-    })
-
+      else if (plane.position.z < -(this.textures.length * 15)) {
+        plane.position.z = this.planes[0].position.z + 15 * (this.planes.length - i);
+      }
+    });
     requestAnimationFrame(() => this.animate());
     this.renderer.render(this.scene, this.camera);
-    // this.controls.update();
-    // camera.position.x += (mouse.x * 5 - camera.position.x) * 0.05;
-    // camera.position.y += (-mouse.y * 5 - camera.position.y) * 0.05;
   }
 
   @HostListener('window:resize', ['$event'])
@@ -242,8 +243,6 @@ export class ParallaxTunnelComponent implements AfterViewInit {
     if (this.renderer) {
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
     }
-
-    // this.controls.handleResize();
   }
 
   private buildRenderer(container: HTMLElement, canvas: any) {
@@ -269,14 +268,6 @@ export class ParallaxTunnelComponent implements AfterViewInit {
     camera.position.z = 10;
     camera.up.set(0, 0, 1);
     return camera;
-  }
-
-  private createControls() {
-    this.controls = new TrackballControls(this.camera, this.renderer.domElement);
-    this.controls.rotateSpeed = 10.0;
-    this.controls.zoomSpeed = 1.2;
-    this.controls.panSpeed = 10.8;
-    this.controls.keys = [ 'KeyA', 'KeyS', 'KeyD' ];
   }
 
   private randomBetween(min: number, max: number): number {
